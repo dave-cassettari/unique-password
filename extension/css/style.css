@@ -50,6 +50,12 @@ form
 	left: 50%;
 }
 
+.footer
+{
+	padding: 5px;
+	text-align: right;
+}
+
 @media (max-width: 400px) {
 	.wrapper
 	{
