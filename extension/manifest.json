@@ -7,7 +7,7 @@
 
   "content_scripts": [{
     "matches": ["*://*/*"],
-    "js":["background.js"]
+    "js":["content.js"]
   }],
 
   "browser_action": {

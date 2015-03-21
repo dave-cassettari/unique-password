@@ -1,8 +1,23 @@
 var app = angular.module('app', []),
     tab = null;
 
-app.controller('PasswordController', ['$scope', function($scope) {
+app.service('password', function() {
+  return {
+    master: '',
+    domain: '',
+    hashed: '',
+    version: '1',
+    generate: function() {
+      var plain = this.master + this.domain + this.version;
 
+      this.hashed = Sha256.hash(plain);
+
+      return this.hashed;
+    },
+  };
+});
+
+app.controller('ExtensionController', ['$scope', 'password', function($scope, password) {
   $scope.safeApply = function(fn) {
     var phase = this.$root.$$phase;
 
@@ -16,24 +31,14 @@ app.controller('PasswordController', ['$scope', function($scope) {
   };
 
   angular.extend($scope, {
-    master: '',
-    domain: '',
-    hashed: '',
-    version: '1',
+    password: password,
     revealed: false,
     haveInput: true,
-    generate: function() {
-      var plain = $scope.master + $scope.domain + $scope.version;
-
-      $scope.hashed = plain;
-
-      return $scope.hashed;
-    },
     populate: function() {
-      var password = $scope.generate();
+      var hashed = password.generate();
       
-      chrome.tabs.sendMessage(tab.id, { id: 'set-password', password: password }, function(response) {
-        if (response.success) {
+      chrome.tabs.sendMessage(tab.id, { id: 'set-password', password: hashed }, function(response) {
+        if (response && response.success) {
           window.close();
         } else {
           $scope.safeApply(function() {
@@ -56,11 +61,23 @@ app.controller('PasswordController', ['$scope', function($scope) {
       $scope.safeApply(function() {
         var url = new URL("http://www.google.com");
         
-        $scope.domain = url.hostname;
+        $scope.password.domain = url.hostname;
       });
     });
   }, true);
+}]);
 
+app.controller('ApplicationController', ['$scope', 'password', function($scope, password) {
+  angular.extend($scope, {
+    password: password,
+    revealed: false,
+    populate: function() {
+      password.generate();
+    },
+    toggle: function() {
+      $scope.revealed = !$scope.revealed;
+    }
+  });
 }]);
 
 app.directive('selected', function() {

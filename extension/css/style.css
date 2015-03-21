@@ -1,7 +1,11 @@
 html
 {
-	width: 300px;
 	font-size: 11px;
+}
+
+html.is-application
+{
+	background: url('../images/background.png') center center repeat;
 }
 
 form
@@ -25,6 +29,25 @@ form
 .ng-invalid
 {
 	border-color: #f00;
+}
+
+.popup
+{
+	width: 300px;
+}
+
+.wrapper
+{
+	width: 400px;
+	height: 370px;
+	margin-top: -185px;
+	margin-left: -200px;
+	background: #fff;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
 }
 
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak, .ng-hide
