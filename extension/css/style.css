@@ -1,0 +1,33 @@
+html
+{
+	width: 300px;
+	font-size: 11px;
+}
+
+form
+{
+	padding: 20px 20px 5px;
+}
+
+.label-text
+{
+	display: block;
+}
+
+.label-desc
+{
+	color: #666;
+	font-size: 90%;
+	font-weight: normal;
+	display: block;
+}
+
+.ng-invalid
+{
+	border-color: #f00;
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak, .ng-hide
+{
+	display: none !important;
+}
