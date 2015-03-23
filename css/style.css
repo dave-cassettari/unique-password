@@ -3,7 +3,7 @@ html
 	font-size: 11px;
 }
 
-html.is-application
+body.is-application
 {
 	background: url('../images/background.png') center center repeat;
 }
@@ -41,11 +41,10 @@ i
 	width: 420px;
 }
 
-html.is-application .wrapper
+body.is-application .wrapper
 {
-	height: 462px;
-	margin-top: -231px;
-	margin-left: -200px;
+	margin-top: -213px;
+	margin-left: -210px;
 	background: #fff;
 	border: 1px solid #ccc;
 	border-radius: 4px;
@@ -54,20 +53,19 @@ html.is-application .wrapper
 	left: 50%;
 }
 
+.panel
+{
+	margin-bottom: 5px;
+}
+
 .footer
 {
 	padding: 0 20px 10px;
 	text-align: right;
 }
 
-.form-group.is-option
-{
-	width: 150px;
-	float: right;
-}
-
 @media (max-width: 400px) {
-	html.is-application .wrapper
+	body.is-application .wrapper
 	{
 		width: 100%;
 		left: 0;
@@ -76,7 +74,7 @@ html.is-application .wrapper
 }
 
 @media (max-height: 370px) {
-	html.is-application .wrapper
+	body.is-application .wrapper
 	{
 		top: 0;
 		margin-top: 0;

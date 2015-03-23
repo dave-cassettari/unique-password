@@ -3,15 +3,17 @@ $(function() {
     var self = this,
         tab = null;
 
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      tab = tabs[0];
+    if (chrome && chrome.tabs) {
+      chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+        tab = tabs[0];
 
-      var url = new URL(tab.url);
+        var url = new URL(tab.url);
 
-      self.domain(url.hostname);
+        self.domain(url.hostname);
 
-      chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: true });
-    });
+        chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: true });
+      });
+    }
 
     self.reveal = ko.observable(false);
     self.domain = ko.observable('');
@@ -40,11 +42,15 @@ $(function() {
     });
 
     self.discover = function() {
-      chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: false });
+      if (chrome && chrome.tabs) {
+        chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: false });
+      }
     };
 
     self.populate = function() {
-      chrome.tabs.sendMessage(tab.id, { id: 'set-value', value: self.hashed() });
+      if (chrome && chrome.tabs) {
+        chrome.tabs.sendMessage(tab.id, { id: 'set-value', value: self.hashed() });
+      }
     };
 
     self.toggleReveal = function() {
@@ -62,20 +68,23 @@ $(function() {
     };
 
     self.isApplication = function() {
-      return (chrome && chrome.extension);
+      console.log(chrome.tabs);
+      return !(chrome && chrome.tabs);
     };
 
     self.domain.subscribe(function(newValue) {
       var key = Sha256.hash(newValue);
 
-      chrome.storage.sync.get(key, function(items) {
-        var value = items[key],
-            length = parseInt(value);
+      if (chrome && chrome.storage) {
+        chrome.storage.sync.get(key, function(items) {
+          var value = items[key],
+              length = parseInt(value);
 
-        if (length !== NaN) {
-          self.length(length);;
-        }
-      });
+          if (length !== NaN) {
+            self.length(length);;
+          }
+        });
+      }
     });
   };
 
