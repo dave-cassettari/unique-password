@@ -1,133 +1,83 @@
-var app = angular.module('app', []),
-    tab = null;
+$(function() {
+  function AppViewModel() {
+    var self = this,
+        tab = null;
 
-function safeApply($scope, fn) {
-  var phase;
+    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+      tab = tabs[0];
 
-  if (this.$root) {
-    phase = this.$root.$$phase;
-  } else {
-    phase = this.$$phase;
-  }
+      var url = new URL(tab.url);
 
-  if(phase == '$apply' || phase == '$digest') {
-    if(fn && (typeof(fn) === 'function')) {
-      fn();
-    }
-  } else {
-    this.$apply(fn);
-  }
-};
+      self.domain(url.hostname);
 
-app.service('password', ['$rootScope', function($rootScope) {
-  var service = {
-    length: null,
-    master: '',
-    domain: '',
-    hashed: '',
-    version: '1',
-    generate: function() {
-      var plain = this.master + this.domain + this.version,
-          parsed = parseInt(this.length);
+      chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: true });
+    });
 
-      this.hashed = Sha256.hash(plain);
+    self.reveal = ko.observable(false);
+    self.domain = ko.observable('');
+    self.master = ko.observable('');
+    self.length = ko.observable(null);
+    self.version = ko.observable(1);
+    self.options = ko.observable(false);
 
-      if (chrome.storage && parsed !== NaN && parsed > 0) {
-        var data = {};
+    self.hashed = ko.pureComputed(function() {
+      var plain = self.master() + self.domain() + self.version(),
+          length = parseInt(self.length()),
+          hashed = Sha256.hash(plain);
 
-        this.hashed = this.hashed.substring(0, parsed);
+      if (chrome.storage && length !== NaN && length > 0) {
+        var data = {},
+            key = Sha256.hash(self.domain());
 
-        data[this.domain] = parsed;
+        hashed = hashed.substring(0, length);
+
+        data[key] = length;
 
         chrome.storage.sync.set(data);
       }
 
-      return this.hashed;
-    },
-  };
+      return hashed;
+    });
 
-  $rootScope.$watch(function() {
-    return this.domain;
-  }, function (newValue) {
-    if (!chrome.storage) {
-      return;
-    }
+    self.discover = function() {
+      chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: false });
+    };
 
-    chrome.storage.sync.get(this.domain, function(items) {
-      var length = items[this.domain],
-          parsed = parseInt(length);
+    self.populate = function() {
+      chrome.tabs.sendMessage(tab.id, { id: 'set-value', value: self.hashed() });
+    };
 
-      if (parsed !== NaN) {
-        safeApply($rootScope, function() {
-          this.length = items;
-      });
+    self.toggleReveal = function() {
+      self.reveal(!self.reveal());
+
+      if (self.reveal()) {
+        $('#input-hashed').focus().select();
+      } else {
+        $('#input-master').focus();
       }
-    });
-  });
+    };
 
-  return service;
-}]);
+    self.toggleOptions = function() {
+      self.options(!self.options());
+    };
 
-app.controller('ExtensionController', ['$scope', 'password', function($scope, password) {
-  angular.extend($scope, {
-    password: password,
-    revealed: false,
-    haveInput: true,
-    populate: function() {
-      var hashed = password.generate();
-      
-      chrome.tabs.sendMessage(tab.id, { id: 'set-password', password: hashed }, function(response) {
-        if (response && response.success) {
-          window.close();
-        } else {
-          safeApply($scope, function() {
-            $scope.haveInput = false;
-          });
+    self.isApplication = function() {
+      return (chrome && chrome.extension);
+    };
+
+    self.domain.subscribe(function(newValue) {
+      var key = Sha256.hash(newValue);
+
+      chrome.storage.sync.get(key, function(items) {
+        var value = items[key],
+            length = parseInt(value);
+
+        if (length !== NaN) {
+          self.length(length);;
         }
       });
-    },
-    toggle: function() {
-      $scope.revealed = !$scope.revealed;
-    }
-  });
-
-  addEventListener('load', function (event) {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-      tab = tabs[0];
-
-      chrome.tabs.sendMessage(tab.id, { id: 'is-opening' });
-
-      safeApply($scope, function() {
-        var url = new URL("http://www.google.com");
-        
-        $scope.password.domain = url.hostname;
-      });
     });
-  }, true);
-}]);
-
-app.controller('ApplicationController', ['$scope', 'password', function($scope, password) {
-  angular.extend($scope, {
-    password: password,
-    revealed: false,
-    populate: function() {
-      password.generate();
-    },
-    toggle: function() {
-      $scope.revealed = !$scope.revealed;
-    }
-  });
-}]);
-
-app.directive('selected', function() {
-  return {
-    link: function($scope, $element, attrs) {
-      $scope.$watch('revealed', function(newValue) {
-        if (newValue) {
-          $element.focus();
-          $element.select();
-        }
-      });
-    }
   };
-})
+
+  ko.applyBindings(AppViewModel);
+});

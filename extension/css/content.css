@@ -1,0 +1,6 @@
+.password-generator-active
+{
+	background: #ddd !important;
+	box-shadow: 0 0 5px #333 !important;
+	border-color: #f00 !important;
+}
