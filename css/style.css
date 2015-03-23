@@ -79,6 +79,16 @@ body.is-application .btn-group.is-reveal
 	text-align: right;
 }
 
+.hosted
+{
+	float: left;
+}
+
+body.is-application .hosted
+{
+	display: none;
+}
+
 @media (max-width: 400px) {
 	body.is-application .wrapper
 	{
