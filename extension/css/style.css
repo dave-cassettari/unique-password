@@ -39,8 +39,8 @@ form
 .wrapper
 {
 	width: 400px;
-	height: 370px;
-	margin-top: -185px;
+	height: 462px;
+	margin-top: -231px;
 	margin-left: -200px;
 	background: #fff;
 	border: 1px solid #ccc;
@@ -52,8 +52,14 @@ form
 
 .footer
 {
-	padding: 5px;
+	padding: 0 20px 10px;
 	text-align: right;
+}
+
+.form-group.is-option
+{
+	width: 150px;
+	float: right;
 }
 
 @media (max-width: 400px) {

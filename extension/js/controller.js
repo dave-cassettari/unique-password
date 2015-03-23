@@ -1,35 +1,74 @@
 var app = angular.module('app', []),
     tab = null;
 
-app.service('password', function() {
-  return {
+function safeApply($scope, fn) {
+  var phase;
+
+  if (this.$root) {
+    phase = this.$root.$$phase;
+  } else {
+    phase = this.$$phase;
+  }
+
+  if(phase == '$apply' || phase == '$digest') {
+    if(fn && (typeof(fn) === 'function')) {
+      fn();
+    }
+  } else {
+    this.$apply(fn);
+  }
+};
+
+app.service('password', ['$rootScope', function($rootScope) {
+  var service = {
+    length: null,
     master: '',
     domain: '',
     hashed: '',
     version: '1',
     generate: function() {
-      var plain = this.master + this.domain + this.version;
+      var plain = this.master + this.domain + this.version,
+          parsed = parseInt(this.length);
 
       this.hashed = Sha256.hash(plain);
+
+      if (chrome.storage && parsed !== NaN && parsed > 0) {
+        var data = {};
+
+        this.hashed = this.hashed.substring(0, parsed);
+
+        data[this.domain] = parsed;
+
+        chrome.storage.sync.set(data);
+      }
 
       return this.hashed;
     },
   };
-});
+
+  $rootScope.$watch(function() {
+    return this.domain;
+  }, function (newValue) {
+    if (!chrome.storage) {
+      return;
+    }
+
+    chrome.storage.sync.get(this.domain, function(items) {
+      var length = items[this.domain],
+          parsed = parseInt(length);
+
+      if (parsed !== NaN) {
+        safeApply($rootScope, function() {
+          this.length = items;
+      });
+      }
+    });
+  });
+
+  return service;
+}]);
 
 app.controller('ExtensionController', ['$scope', 'password', function($scope, password) {
-  $scope.safeApply = function(fn) {
-    var phase = this.$root.$$phase;
-
-    if(phase == '$apply' || phase == '$digest') {
-      if(fn && (typeof(fn) === 'function')) {
-        fn();
-      }
-    } else {
-      this.$apply(fn);
-    }
-  };
-
   angular.extend($scope, {
     password: password,
     revealed: false,
@@ -41,7 +80,7 @@ app.controller('ExtensionController', ['$scope', 'password', function($scope, pa
         if (response && response.success) {
           window.close();
         } else {
-          $scope.safeApply(function() {
+          safeApply($scope, function() {
             $scope.haveInput = false;
           });
         }
@@ -58,7 +97,7 @@ app.controller('ExtensionController', ['$scope', 'password', function($scope, pa
 
       chrome.tabs.sendMessage(tab.id, { id: 'is-opening' });
 
-      $scope.safeApply(function() {
+      safeApply($scope, function() {
         var url = new URL("http://www.google.com");
         
         $scope.password.domain = url.hostname;

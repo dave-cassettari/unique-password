@@ -21,35 +21,39 @@
     <body data-ng-app="app" data-ng-controller="ApplicationController">
         <div class="wrapper">
             <form data-ng-submit="populate()">
-              <div class="form-group">
-                <label for="input-domain">
-                  <span class="label-text">Site Name</span>
-                  <span class="label-desc">Usually the domain of the website, such as 'www.facebook.com'</span>
-                </label>
-                <input id="input-domain" class="form-control" required type="text" data-ng-model="password.domain" />
-              </div>
+                <div class="form-group">
+                  <label for="input-domain">
+                    <span class="label-text">Site Name</span>
+                    <span class="label-desc">Usually the domain of the website, such as 'www.facebook.com'</span>
+                  </label>
+                  <input id="input-domain" class="form-control" required type="text" data-ng-model="password.domain" />
+                </div>
 
-              <div class="form-group">
-                <label for="input-master">
-                  <span class="label-text">Master Password</span>
-                  <span class="label-desc">This is the same across all sites</span>
-                </label>
-                <input id="input-master" class="form-control" required autofocus="autofocus" type="password" data-ng-model="password.master" />
-              </div>
+                <div class="form-group">
+                  <label for="input-master">
+                    <span class="label-text">Master Password</span>
+                    <span class="label-desc">This is the same across all sites</span>
+                  </label>
+                  <input id="input-master" class="form-control" required autofocus="autofocus" type="password" data-ng-model="password.master" />
+                </div>
 
-              <div class="form-group">
-                <button type="button" class="btn btn-primary" data-ng-click="populate()">Generate</button>
-                <button type="button" class="btn btn-primary" data-ng-click="toggle()">{{ (revealed) ? 'Hide' : 'Show' }}</button>
-              </div>
+                  <div class="form-group">
+                    <div class="form-group is-option">
+                        <input id="input-length" class="form-control" type="numeric" placeholder="Maximum Length" data-ng-model="password.length" />
+                    </div>
 
-              <div class="form-group">
-                <label for="input-hashed">
-                  <span class="label-text">Site Password</span>
-                  <span class="label-desc">Created from the site name and your master password</span>
-                </label>
-                <input id="input-hashed" class="form-control" type="{{ (revealed) ? 'text' : 'password' }}" data-ng-model="password.hashed" data-selected />
-              </div>
-            </form>
+                    <button type="submit" class="btn btn-primary">OK</button>
+                    <button type="button" class="btn btn-primary" data-ng-click="toggle()">{{ (revealed) ? 'Hide' : 'Show' }}</button>
+                  </div>
+
+                  <div class="form-group">
+                    <label for="input-hashed">
+                      <span class="label-text">Site Password</span>
+                      <span class="label-desc">Created from the site name and your master password</span>
+                    </label>
+                    <input id="input-hashed" class="form-control" type="{{ (revealed) ? 'text' : 'password' }}" data-ng-model="password.hashed" data-selected />
+                  </div>
+              </form>
 
             <div class="footer">
                 <span>View the code on <a href="https://github.com/dave-cassettari/unique-password" target="_blank">GitHub</a></span>
