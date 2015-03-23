@@ -53,6 +53,21 @@ body.is-application .wrapper
 	left: 50%;
 }
 
+.btn-group.is-reveal
+{
+	float: right;
+}
+
+body.is-application .btn-group.is-populate
+{
+	display: none;
+}
+
+body.is-application .btn-group.is-reveal
+{
+	float: none;
+}
+
 .panel
 {
 	margin-bottom: 5px;
