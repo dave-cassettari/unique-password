@@ -59,12 +59,12 @@ $(function() {
       });
     }
 
-    self.reveal = ko.observable(true);
+    self.reveal = ko.observable(false);
     self.domain = ko.observable('');
     self.master = ko.observable('');
     self.length = ko.observable(DEFAULT_LENGTH);
     self.version = ko.observable(1);
-    self.options = ko.observable(true);
+    self.options = ko.observable(false);
     self.include = ko.observable(DEFAULT_INCLUDE);
 
     self.hashed = ko.pureComputed(function() {
