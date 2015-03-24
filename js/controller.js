@@ -5,46 +5,62 @@ $(function() {
         INCLUDE_COUNT = 4,
         self = this,
         tab = null,
-        isChrome = (typeof chrome !== 'undefined');
+        isChrome = (typeof chrome !== 'undefined'),
+        hasStorage = ('localStorage' in window && window['localStorage'] !== null);
 
     function replaceAt(string, index, character) {
       return string.substr(0, index) + character + string.substr(index + character.length);
     }
 
     function saveSettings() {
-      if (self.length() == DEFAULT_LENGTH &&
-          self.include() == DEFAULT_INCLUDE) {
-        return;
+      var data = {},
+          key = Sha256.hash(self.domain());
+
+      if (self.length() !== DEFAULT_LENGTH) {
+        data.length = self.length();
+      }
+
+      if (self.include() !== DEFAULT_INCLUDE) {
+        data.include = self.include();
       }
 
       if (isChrome && chrome.storage !== undefined) {
-        var data = {},
-            key = Sha256.hash(self.domain());
+        var chromeData = {};
 
-        data[key] = {
-          length: self.length(),
-          include: self.include()
-        };
+        chromeData[key] = data;
 
-        chrome.storage.sync.set(data);
+        chrome.storage.sync.set(chromeData);
+      } else if (hasStorage) {
+        localStorage.setItem(key, JSON.stringify(data));
       }
     }
 
-    function loadSettings(callback) {
-      var key = Sha256.hash(self.domain());
+    function loadSettings() {
+      var key = Sha256.hash(self.domain()),
+          callback;
+
+      callback = function(data) {
+        if (data && data.hasOwnProperty('length')) {
+          self.length(data.length);
+        } else {
+          self.length(DEFAULT_LENGTH);
+        }
+
+        if (data && data.hasOwnProperty('include')) {
+          self.include(data.include);
+        } else {
+          self.include(DEFAULT_INCLUDE);
+        }
+      };
 
       if (isChrome && chrome.storage !== undefined) {
-        chrome.storage.sync.get(key, function(items) {
-          var length = DEFAULT_LENGTH,
-              include = DEFAULT_INCLUDE;
-
-          if (items.hasOwnProperty(key)) {
-            length = items[key].length;
-            include = items[key].include;
-          }
-
-          callback(length, include);
+        chrome.storage.sync.get(key, function(data) {
+          callback(data[key]);
         });
+      } else if (hasStorage) {
+        var json = localStorage.getItem(key);
+
+        callback(JSON.parse(json));
       }
     }
 
@@ -157,10 +173,7 @@ $(function() {
     };
 
     self.domain.subscribe(function(newValue) {
-      loadSettings(function(length, include) {
-        self.length(length);
-        self.include(include);
-      });
+      loadSettings();
     });
   };
 
