@@ -71,6 +71,7 @@ $(function() {
       var master = self.master(),
           domain = self.domain(),
           version = self.version(),
+          include = self.include(),
           plain = master + domain + version,
           length = parseInt(self.length()),
           hashed = Sha256.hash(plain);
@@ -88,9 +89,8 @@ $(function() {
         data[key] = length;
       }
 
-      if (include !== null) {
+      if (include !== null && include !== '') {
         var i,
-            include = self.include(),
             offset = 0,
             frequency = 0,
             hashedCode = 0,
