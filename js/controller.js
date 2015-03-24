@@ -4,7 +4,8 @@ $(function() {
         DEFAULT_INCLUDE = '!"£$%^&*():@~<>?',
         INCLUDE_COUNT = 4,
         self = this,
-        tab = null;
+        tab = null,
+        isChrome = (typeof chrome !== 'undefined');
 
     function replaceAt(string, index, character) {
       return string.substr(0, index) + character + string.substr(index + character.length);
@@ -16,7 +17,7 @@ $(function() {
         return;
       }
 
-      if (chrome && chrome.storage) {
+      if (isChrome && chrome.storage !== undefined) {
         var data = {},
             key = Sha256.hash(self.domain());
 
@@ -32,7 +33,7 @@ $(function() {
     function loadSettings(callback) {
       var key = Sha256.hash(self.domain());
 
-      if (chrome && chrome.storage) {
+      if (isChrome && chrome.storage !== undefined) {
         chrome.storage.sync.get(key, function(items) {
           var length = DEFAULT_LENGTH,
               include = DEFAULT_INCLUDE;
@@ -47,7 +48,7 @@ $(function() {
       }
     }
 
-    if (chrome && chrome.tabs) {
+    if (isChrome && chrome.tabs !== undefined) {
       chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
         tab = tabs[0];
 
@@ -126,13 +127,13 @@ $(function() {
     });
 
     self.discover = function() {
-      if (chrome && chrome.tabs) {
+      if (isChrome && chrome.tabs !== undefined) {
         chrome.tabs.sendMessage(tab.id, { id: 'find-input', reset: false });
       }
     };
 
     self.populate = function() {
-      if (chrome && chrome.tabs) {
+      if (isChrome && chrome.tabs !== undefined) {
         chrome.tabs.sendMessage(tab.id, { id: 'set-value', value: self.hashed() });
       }
     };
@@ -152,7 +153,7 @@ $(function() {
     };
 
     self.isApplication = function() {
-      return !(chrome && chrome.tabs);
+      return !(isChrome && chrome.tabs);
     };
 
     self.domain.subscribe(function(newValue) {
