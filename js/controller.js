@@ -28,11 +28,19 @@ $(function() {
 
     function load(key, callback) {
       if (isChrome && chrome.storage !== undefined) {
-        chrome.storage.sync.get(key, function(data) {
-          callback(data[key]);
+        chrome.storage.sync.get(key, function(response) {
+          var data = response[key];
+
+          if (data) {
+            callback(data);
+          }
         });
       } else if (hasStorage) {
-        callback(JSON.parse(localStorage.getItem(key)));
+        var data = JSON.parse(localStorage.getItem(key));
+
+        if (data) {
+          callback(data);
+        }
       }
     }
 
@@ -56,18 +64,16 @@ $(function() {
           callback;
 
       callback = function(data) {
-        if (data) {
-          if (data.hasOwnProperty('length')) {
-            self.length(data.length);
-          } else {
-            self.length(DEFAULT_LENGTH);
-          }
+        if (data.hasOwnProperty('length')) {
+          self.length(data.length);
+        } else {
+          self.length(DEFAULT_LENGTH);
+        }
 
-          if (data.hasOwnProperty('include')) {
-            self.include(data.include);
-          } else {
-            self.include(DEFAULT_INCLUDE);
-          }
+        if (data.hasOwnProperty('include')) {
+          self.include(data.include);
+        } else {
+          self.include(DEFAULT_INCLUDE);
         }
       };
 

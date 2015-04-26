@@ -3,7 +3,7 @@
 
   "name": "Unique Password Generator",
   "description": "Generate unique passwords for each site using just one master password",
-  "version": "0.0.5",
+  "version": "0.0.7",
 
   "content_scripts": [{
     "matches": ["*://*/*"],
