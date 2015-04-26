@@ -3,6 +3,8 @@ $(function() {
     var DEFAULT_LENGTH = null,
         DEFAULT_INCLUDE = '!"£$%^&*():@~<>?',
         INCLUDE_COUNT = 4,
+        MAX_RECENTS = 5,
+        KEY_SETTINGS = '_app',
         self = this,
         tab = null,
         isChrome = (typeof chrome !== 'undefined'),
@@ -12,18 +14,7 @@ $(function() {
       return string.substr(0, index) + character + string.substr(index + character.length);
     }
 
-    function saveSettings() {
-      var data = {},
-          key = Sha256.hash(self.domain());
-
-      if (self.length() !== DEFAULT_LENGTH) {
-        data.length = self.length();
-      }
-
-      if (self.include() !== DEFAULT_INCLUDE) {
-        data.include = self.include();
-      }
-
+    function save(key, data) {
       if (isChrome && chrome.storage !== undefined) {
         var chromeData = {};
 
@@ -35,33 +26,52 @@ $(function() {
       }
     }
 
-    function loadSettings() {
-      var key = Sha256.hash(self.domain()),
-          callback;
-
-      callback = function(data) {
-        if (data && data.hasOwnProperty('length')) {
-          self.length(data.length);
-        } else {
-          self.length(DEFAULT_LENGTH);
-        }
-
-        if (data && data.hasOwnProperty('include')) {
-          self.include(data.include);
-        } else {
-          self.include(DEFAULT_INCLUDE);
-        }
-      };
-
+    function load(key, callback) {
       if (isChrome && chrome.storage !== undefined) {
         chrome.storage.sync.get(key, function(data) {
           callback(data[key]);
         });
       } else if (hasStorage) {
-        var json = localStorage.getItem(key);
-
-        callback(JSON.parse(json));
+        callback(JSON.parse(localStorage.getItem(key)));
       }
+    }
+
+    function saveSettings() {
+      var key = Sha256.hash(self.domainKey()),
+          data = {};
+
+      if (self.length() !== DEFAULT_LENGTH) {
+        data.length = self.length();
+      }
+
+      if (self.include() !== DEFAULT_INCLUDE) {
+        data.include = self.include();
+      }
+
+      save(key, data);
+    }
+
+    function loadSettings() {
+      var key = Sha256.hash(self.domainKey()),
+          callback;
+
+      callback = function(data) {
+        if (data) {
+          if (data.hasOwnProperty('length')) {
+            self.length(data.length);
+          } else {
+            self.length(DEFAULT_LENGTH);
+          }
+
+          if (data.hasOwnProperty('include')) {
+            self.include(data.include);
+          } else {
+            self.include(DEFAULT_INCLUDE);
+          }
+        }
+      };
+
+      load(key, callback);
     }
 
     if (isChrome && chrome.tabs !== undefined) {
@@ -83,23 +93,44 @@ $(function() {
     self.version = ko.observable(1);
     self.options = ko.observable(false);
     self.include = ko.observable(DEFAULT_INCLUDE);
+    self.recents = ko.observableArray();
+    self.recentShow = ko.observable(false);
+
+    self.recentSet = function(newDomain) {
+      self.domain(newDomain);
+      self.recentShow(false);
+    };
+
+    self.recentToggle = function() {
+      self.recentShow(!self.recentShow());
+    };
+
+    self.domainKey = ko.pureComputed(function() {
+      var domain = self.domain();
+
+      if (domain === null || domain === undefined || domain === '') {
+        return null;
+      }
+
+      return domain.trim().toLowerCase();
+    }).extend({ throttle: 500 });
 
     self.hashed = ko.pureComputed(function() {
       var master = self.master(),
-          domain = self.domain(),
+          domain = self.domainKey(),
           version = self.version(),
           include = self.include(),
           plain = master + domain + version,
           length = parseInt(self.length()),
           hashed = Sha256.hash(plain);
 
-      if (master === '' || domain ==='') {
+      if (master === '' || domain === null) {
         return '';
       }
 
       if (length !== NaN && length > 0) {
         var data = {},
-            key = Sha256.hash(self.domain());
+            key = Sha256.hash(domain);
 
         hashed = hashed.substring(0, length);
 
@@ -172,8 +203,32 @@ $(function() {
       return !(isChrome && chrome.tabs);
     };
 
-    self.domain.subscribe(function(newValue) {
+    self.domainKey.subscribe(function(newValue) {
       loadSettings();
+
+      var recentIndex = self.recents().indexOf(newValue);
+
+      if (recentIndex >= 0) {
+        self.recents().splice(recentIndex, 1);
+      } else if (self.recents().length >= MAX_RECENTS) {
+        self.recents().pop();
+      }
+
+      self.recents.unshift(newValue);
+    });
+
+    self.recents.subscribe(function(newValue) {
+      var data = {
+        recents: self.recents(),
+      };
+
+      save(KEY_SETTINGS, data);
+    });
+
+    load(KEY_SETTINGS, function(data) {
+      if (data.hasOwnProperty('recents')) {
+        self.recents(data.recents);
+      }
     });
   };
 
