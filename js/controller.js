@@ -12,38 +12,34 @@ $(function() {
     }
 
     function saveSettings() {
-      if (self.length() == DEFAULT_LENGTH &&
-          self.include() == DEFAULT_INCLUDE) {
-        return;
-      }
-
       if (isChrome && chrome.storage !== undefined) {
-        var data = {},
-            key = Sha256.hash(self.domain());
+        var key = Sha256.hash(self.domain()),
+            data = {};
 
-        data[key] = {
-          length: self.length(),
-          include: self.include()
-        };
+        if (self.length() !== DEFAULT_LENGTH) {
+          data.length = self.length();
+        }
+
+        if (self.include() !== DEFAULT_INCLUDE) {
+          data.include = self.include();
+        }
 
         chrome.storage.sync.set(data);
       }
     }
 
-    function loadSettings(callback) {
-      var key = Sha256.hash(self.domain());
-
+    function loadSettings() {
       if (isChrome && chrome.storage !== undefined) {
-        chrome.storage.sync.get(key, function(items) {
-          var length = DEFAULT_LENGTH,
-              include = DEFAULT_INCLUDE;
+        var key = Sha256.hash(self.domain());
 
-          if (items.hasOwnProperty(key)) {
-            length = items[key].length;
-            include = items[key].include;
+        chrome.storage.sync.get(key, function(data) {
+          if (data.hasOwnProperty('length')) {
+            self.length(data.length);
           }
 
-          callback(length, include);
+          if (data.hasOwnProperty('include')) {
+            self.include(data.include);
+          }
         });
       }
     }
@@ -157,10 +153,7 @@ $(function() {
     };
 
     self.domain.subscribe(function(newValue) {
-      loadSettings(function(length, include) {
-        self.length(length);
-        self.include(include);
-      });
+      loadSettings();
     });
   };
 
