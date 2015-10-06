@@ -92,6 +92,44 @@ body.is-application .btn-group.is-reveal
 	float: left;
 }
 
+.form-group
+{
+	position: relative;
+}
+
+.recents
+{
+	margin-top: -1px;
+	background: #fff;
+	box-shadow: 2px 2px 5px #ccc;
+	display: none;
+	position: absolute;
+	left: 0;
+	right: 0;
+	z-index: 1;
+}
+
+.recents.is-visible
+{
+	display: block;
+}
+
+.recents .panel-body
+{
+	padding: 10px 12px 5px;
+}
+
+.recents a
+{
+	padding: 0 0 5px;
+	display: block;
+}
+
+.fa-caret-down
+{
+	margin-right: 0;
+}
+
 body.is-application .hosted
 {
 	display: none;

@@ -25,7 +25,17 @@
             <span class="label-text">Site Name</span>
             <span class="label-desc">Usually the domain of the website, such as 'www.facebook.com'</span>
           </label>
-          <input id="input-domain" class="form-control" required="required" type="text" data-bind="textInput: domain" />
+          <div class="input-group">
+            <input id="input-domain" class="form-control" required="required" type="text" data-bind="textInput: domain" />
+            <a class="input-group-addon" href="#" data-bind="click: recentToggle">
+              <i class="fa fa-caret-down"></i>
+            </a>
+          </div>
+          <div class="panel panel-default recents" data-bind="css: { 'is-visible': recentShow() }">
+            <div class="panel-body" data-bind="foreach: recents">
+              <a href="#" data-bind="click: recentSet, text: $data"></a>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
