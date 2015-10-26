@@ -33,6 +33,9 @@
           </div>
           <div class="panel panel-default recents" data-bind="css: { 'is-visible': recentShow() }">
             <div class="panel-body" data-bind="foreach: recents">
+              <a href="#" data-bind="click: recentRemove" class="recents-remove">
+                <i class="fa fa-times"></i>
+              </a>
               <a href="#" data-bind="click: recentSet, text: $data"></a>
             </div>
           </div>

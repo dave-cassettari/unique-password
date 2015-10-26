@@ -116,13 +116,26 @@ body.is-application .btn-group.is-reveal
 
 .recents .panel-body
 {
-	padding: 10px 12px 5px;
+	padding: 10px 5px 5px 12px;
 }
 
 .recents a
 {
 	padding: 0 0 5px;
 	display: block;
+}
+
+.recents-remove
+{
+	float: right;
+	color: #ebccd1;
+	font-weight: normal;
+}
+
+.recents-remove:hover,
+.recents-remove:active
+{
+	color: #a94442;
 }
 
 .fa-caret-down

@@ -107,6 +107,10 @@ $(function() {
       self.recentShow(false);
     };
 
+    self.recentRemove = function(oldDomain) {
+      self.recents.remove(oldDomain);
+    };
+
     self.recentToggle = function() {
       self.recentShow(!self.recentShow());
     };
