@@ -171,6 +171,71 @@ namespace UniquePassword.AndroidApplication
             SaveKnownDomain();
         }
 
+        #region Hashing
+
+        private string ComputeHash(string master, string domain, char[] specialCharacters, int? maxLength = null, int version = 1)
+        {
+            if (string.IsNullOrWhiteSpace(master) || string.IsNullOrWhiteSpace(domain))
+            {
+                return null;
+            }
+
+            var crypt = new SHA256Managed();
+            var hashed = new StringBuilder();
+            var encoding = Encoding.UTF8;
+            var plainText = string.Format("{0}{1}{2}", master, domain, version);
+            var encrypted = crypt.ComputeHash(encoding.GetBytes(plainText), 0, encoding.GetByteCount(plainText));
+
+            foreach (var encryptedByte in encrypted)
+            {
+                hashed.Append(encryptedByte.ToString("x2"));
+            }
+
+            var password = hashed.ToString();
+
+            if (maxLength.HasValue)
+            {
+                var maximimum = Math.Min(maxLength.Value, password.Length);
+
+                password = password.Substring(0, maximimum);
+            }
+
+            if (specialCharacters != null && specialCharacters.Length > 0)
+            {
+                var hashedCode = 0;
+                var newPassword = new StringBuilder(password);
+
+                Array.Sort(specialCharacters, Comparer<char>.Default);
+
+                for (var i = 0; i < password.Length; i++)
+                {
+                    hashedCode += (int)password[i];
+                }
+
+                var offset = hashedCode % specialCharacters.Length;
+                var frequency = (int)Math.Floor((double)password.Length / SpecialCharacterCount);
+
+
+                for (var i = 0; i < SpecialCharacterCount; i++)
+                {
+                    var includeChar = specialCharacters[(offset + i) % specialCharacters.Length];
+                    var includeIndex = (offset + frequency * i) % password.Length;
+
+                    newPassword[includeIndex] = includeChar;
+                }
+
+                password = newPassword.ToString();
+            }
+
+            //SaveSettings();
+
+            return password;
+        }
+
+        #endregion
+
+        #region Known Domains
+
         private void SaveKnownDomain()
         {
             RunOnUiThread(() =>
@@ -271,6 +336,10 @@ namespace UniquePassword.AndroidApplication
             });
         }
 
+        #endregion
+
+        #region Input Parsing
+
         private int GetCurrentLength()
         {
             int length;
@@ -282,6 +351,10 @@ namespace UniquePassword.AndroidApplication
 
             return DefaultMaximumLength;
         }
+
+        #endregion
+
+        #region Event Handlers
 
         private void OnInputChanged(object sender, TextChangedEventArgs e)
         {
@@ -328,67 +401,11 @@ namespace UniquePassword.AndroidApplication
                 case 1:
                     _textMaster.RequestFocus();
                     break;
+
             }
         }
 
-        public static string ComputeHash(string master, string domain, char[] specialCharacters, int? maxLength = null, int version = 1)
-        {
-            if (string.IsNullOrWhiteSpace(master) || string.IsNullOrWhiteSpace(domain))
-            {
-                return null;
-            }
-
-            var crypt = new SHA256Managed();
-            var hashed = new StringBuilder();
-            var encoding = Encoding.UTF8;
-            var plainText = string.Format("{0}{1}{2}", master, domain, version);
-            var encrypted = crypt.ComputeHash(encoding.GetBytes(plainText), 0, encoding.GetByteCount(plainText));
-
-            foreach (var encryptedByte in encrypted)
-            {
-                hashed.Append(encryptedByte.ToString("x2"));
-            }
-
-            var password = hashed.ToString();
-
-            if (maxLength.HasValue)
-            {
-                var maximimum = Math.Min(maxLength.Value, password.Length);
-
-                password = password.Substring(0, maximimum);
-            }
-
-            if (specialCharacters != null && specialCharacters.Length > 0)
-            {
-                var hashedCode = 0;
-                var newPassword = new StringBuilder(password);
-
-                Array.Sort(specialCharacters, Comparer<char>.Default);
-
-                for (var i = 0; i < password.Length; i++)
-                {
-                    hashedCode += (int)password[i];
-                }
-
-                var offset = hashedCode % specialCharacters.Length;
-                var frequency = (int)Math.Floor((double)password.Length / SpecialCharacterCount);
-
-
-                for (var i = 0; i < SpecialCharacterCount; i++)
-                {
-                    var includeChar = specialCharacters[(offset + i) % specialCharacters.Length];
-                    var includeIndex = (offset + frequency * i) % password.Length;
-
-                    newPassword[includeIndex] = includeChar;
-                }
-
-                password = newPassword.ToString();
-            }
-
-            //SaveSettings();
-
-            return password;
-        }
+        #endregion
     }
 }
 
