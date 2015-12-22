@@ -1,8 +1,11 @@
 package org.cassettari.uniquepassword.fragments;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
@@ -16,6 +19,7 @@ import android.widget.TextView;
 import org.cassettari.uniquepassword.KnownDomain;
 import org.cassettari.uniquepassword.R;
 import org.cassettari.uniquepassword.listeners.OnDomainChangedListener;
+import org.cassettari.uniquepassword.storage.DomainsDbHelper;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +28,7 @@ import java.util.Objects;
 public class DomainsFragment extends TitledFragment
 		implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener
 {
+	private DomainsDbHelper databaseHelper;
 	private KnownDomainAdapter listAdapter;
 	private OnDomainChangedListener domainChangedListener;
 
@@ -59,9 +64,25 @@ public class DomainsFragment extends TitledFragment
 		knownDomain.setMaximumLength(maxLength);
 		knownDomain.setSpecialCharacters(specialChars);
 
+		final SQLiteDatabase db = databaseHelper.getWritableDatabase();
+		final ContentValues values = new ContentValues();
+
+		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL, knownDomain.getDomain());
+		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH, knownDomain.getMaximumLength());
+		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS, knownDomain.getSpecialCharacters());
+
 		if (alreadyExisted)
 		{
 			listAdapter.remove(knownDomain);
+
+			final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
+			final String[] arguments = {knownDomain.getDomain()};
+
+			db.update( DomainsDbHelper.DomainEntry.TABLE_NAME, values, selection, arguments);
+		}
+		else
+		{
+			db.insert(DomainsDbHelper.DomainEntry.TABLE_NAME, null, values);
 		}
 
 		listAdapter.insert(knownDomain, 0);
@@ -84,6 +105,12 @@ public class DomainsFragment extends TitledFragment
 					public void onClick(DialogInterface dialog, int id)
 					{
 						listAdapter.remove(knownDomain);
+
+						final SQLiteDatabase db = databaseHelper.getWritableDatabase();
+						final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
+						final String[] arguments = {knownDomain.getDomain()};
+
+						db.delete(DomainsDbHelper.DomainEntry.TABLE_NAME, selection, arguments);
 					}
 				})
 				.setNegativeButton("No", new DialogInterface.OnClickListener()
@@ -101,6 +128,8 @@ public class DomainsFragment extends TitledFragment
 	public void onAttach(Context context)
 	{
 		super.onAttach(context);
+
+		databaseHelper = new DomainsDbHelper(context);
 
 		if (context instanceof OnDomainChangedListener)
 		{
@@ -120,6 +149,45 @@ public class DomainsFragment extends TitledFragment
 		listDomains.setOnItemClickListener(this);
 		listDomains.setOnItemLongClickListener(this);
 		listAdapter.setNotifyOnChange(true);
+
+		final String sortOrder = DomainsDbHelper.DomainEntry.COLUMN_NAME_UPDATED_ON + " ASC";
+		final SQLiteDatabase db = databaseHelper.getWritableDatabase();
+		final String[] projection = {
+				DomainsDbHelper.DomainEntry.COLUMN_NAME_URL,
+				DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH,
+				DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS,
+		};
+
+		final Cursor cursor = db.query(
+				DomainsDbHelper.DomainEntry.TABLE_NAME,
+				projection,
+				null,
+				null,
+				null,
+				null,
+				sortOrder
+		);
+
+		if (cursor.moveToFirst())
+		{
+			do
+			{
+				String url = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL));
+				Integer length = cursor.getInt(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH));
+				String specials = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS));
+				KnownDomain domain = new KnownDomain(url);
+
+				if (length != 0)
+				{
+					domain.setMaximumLength(length);
+				}
+
+				domain.setSpecialCharacters(specials);
+
+				listAdapter.add(domain);
+			}
+			while (cursor.moveToNext());
+		}
 
 		return fragment;
 	}
@@ -169,11 +237,11 @@ public class DomainsFragment extends TitledFragment
 
 			if (view == null)
 			{
-				view = ((Activity)getContext()).getLayoutInflater().inflate(android.R.layout.two_line_list_item, null);
+				view = ((Activity) getContext()).getLayoutInflater().inflate(android.R.layout.two_line_list_item, null);
 			}
 
-			TextView textView1 = (TextView)view.findViewById(android.R.id.text1);
-			TextView textView2 = (TextView)view.findViewById(android.R.id.text2);
+			TextView textView1 = (TextView) view.findViewById(android.R.id.text1);
+			TextView textView2 = (TextView) view.findViewById(android.R.id.text2);
 
 			if (item != null)
 			{
@@ -195,7 +263,7 @@ public class DomainsFragment extends TitledFragment
 				{
 					text2 = null;
 				}
-				
+
 				textView1.setText(item.getDomain());
 				textView2.setText(text2);
 			}

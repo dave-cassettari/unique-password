@@ -1,10 +1,12 @@
 package org.cassettari.uniquepassword;
 
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 
 import org.cassettari.uniquepassword.fragments.DomainsFragment;
 import org.cassettari.uniquepassword.fragments.PasswordFragment;
@@ -98,6 +100,17 @@ public class PasswordActivity
 		viewPager.setAdapter(fragmentPagerAdapter);
 		viewPager.setCurrentItem(1, false);
 		viewPager.setOffscreenPageLimit(2);
+
+		final FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.fab);
+
+		actionButton.setOnClickListener(new View.OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				fragmentPassword.CopyToClipboard();
+			}
+		});
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -53,17 +52,6 @@ public class PasswordFragment extends TitledFragment implements TextWatcher
 		textMaster.addTextChangedListener(this);
 		textDomain.addTextChangedListener(this);
 
-		final Button buttonCopy = (Button) fragment.findViewById(R.id.buttonCopy);
-
-		buttonCopy.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				CopyAndStore();
-			}
-		});
-
 		return fragment;
 	}
 
@@ -98,7 +86,7 @@ public class PasswordFragment extends TitledFragment implements TextWatcher
 		textHashed.setText(hashed);
 	}
 
-	private void CopyAndStore()
+	public void CopyToClipboard()
 	{
 		final String hashed = getHashed();
 
