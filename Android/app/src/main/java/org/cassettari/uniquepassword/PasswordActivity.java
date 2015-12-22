@@ -100,17 +100,6 @@ public class PasswordActivity
 		viewPager.setAdapter(fragmentPagerAdapter);
 		viewPager.setCurrentItem(1, false);
 		viewPager.setOffscreenPageLimit(2);
-
-		final FloatingActionButton actionButton = (FloatingActionButton) findViewById(R.id.fab);
-
-		actionButton.setOnClickListener(new View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				fragmentPassword.CopyToClipboard();
-			}
-		});
 	}
 
 	@Override
