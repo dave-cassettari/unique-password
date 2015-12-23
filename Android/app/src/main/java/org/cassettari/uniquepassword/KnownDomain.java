@@ -1,11 +1,16 @@
 package org.cassettari.uniquepassword;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Objects;
 
 public class KnownDomain
 {
+	@SerializedName("website")
 	private String domain;
+	@SerializedName("maximumLength")
 	private Integer maximumLength;
+	@SerializedName("specialCharacters")
 	private String specialCharacters;
 
 	public KnownDomain(String domain)

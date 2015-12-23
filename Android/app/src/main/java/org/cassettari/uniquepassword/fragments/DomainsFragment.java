@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,18 +17,33 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.ResponseBody;
+import com.squareup.okhttp.logging.HttpLoggingInterceptor;
+
 import org.cassettari.uniquepassword.KnownDomain;
+import org.cassettari.uniquepassword.PasswordActivity;
 import org.cassettari.uniquepassword.R;
 import org.cassettari.uniquepassword.listeners.OnDomainChangedListener;
+import org.cassettari.uniquepassword.services.DomainsService;
 import org.cassettari.uniquepassword.storage.DomainsDbHelper;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import retrofit.Callback;
+import retrofit.GsonConverterFactory;
+import retrofit.Response;
+import retrofit.Retrofit;
+
 public class DomainsFragment extends TitledFragment
 		implements AdapterView.OnItemClickListener, AdapterView.OnItemLongClickListener
 {
+	private static final String API_BASE_URL = "https://uniquepassword.azurewebsites.net/api/";
+
+	private DomainsService domains;
 	private DomainsDbHelper databaseHelper;
 	private KnownDomainAdapter listAdapter;
 	private OnDomainChangedListener domainChangedListener;
@@ -40,6 +56,11 @@ public class DomainsFragment extends TitledFragment
 	}
 
 	public void saveKnownDomain(final String domain, Integer maxLength, String specialChars)
+	{
+		saveKnownDomain(domain, maxLength, specialChars, true);
+	}
+
+	public void saveKnownDomain(final String domain, Integer maxLength, String specialChars, boolean updateApi)
 	{
 		if (Objects.equals(maxLength, SettingsFragment.DEFAULT_MAXIMUM_LENGTH))
 		{
@@ -75,14 +96,25 @@ public class DomainsFragment extends TitledFragment
 		{
 			listAdapter.remove(knownDomain);
 
+			final String website = knownDomain.getDomain();
 			final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
-			final String[] arguments = {knownDomain.getDomain()};
+			final String[] arguments = {website};
 
-			db.update( DomainsDbHelper.DomainEntry.TABLE_NAME, values, selection, arguments);
+			db.update(DomainsDbHelper.DomainEntry.TABLE_NAME, values, selection, arguments);
+
+			if (updateApi)
+			{
+				domains.update(website, knownDomain).enqueue(new IgnoredCallback<KnownDomain>());
+			}
 		}
 		else
 		{
 			db.insert(DomainsDbHelper.DomainEntry.TABLE_NAME, null, values);
+
+			if (updateApi)
+			{
+				domains.create(knownDomain).enqueue(new IgnoredCallback<KnownDomain>());
+			}
 		}
 
 		listAdapter.insert(knownDomain, 0);
@@ -106,11 +138,14 @@ public class DomainsFragment extends TitledFragment
 					{
 						listAdapter.remove(knownDomain);
 
+						final String domain = knownDomain.getDomain();
 						final SQLiteDatabase db = databaseHelper.getWritableDatabase();
 						final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
-						final String[] arguments = {knownDomain.getDomain()};
+						final String[] arguments = {domain};
 
 						db.delete(DomainsDbHelper.DomainEntry.TABLE_NAME, selection, arguments);
+
+						domains.delete(domain).enqueue(new IgnoredCallback<KnownDomain>());
 					}
 				})
 				.setNegativeButton("No", new DialogInterface.OnClickListener()
@@ -188,6 +223,43 @@ public class DomainsFragment extends TitledFragment
 			}
 			while (cursor.moveToNext());
 		}
+
+		cursor.close();
+
+		final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+
+		interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+		final OkHttpClient httpClient = new OkHttpClient();
+
+		httpClient.interceptors().add(interceptor);
+
+		final Retrofit api = new Retrofit.Builder()
+				.baseUrl(API_BASE_URL)
+				.addConverterFactory(GsonConverterFactory.create())
+				.client(httpClient)
+				.build();
+
+		domains = api.create(DomainsService.class);
+
+		domains.get().enqueue(new SuccessCallback<List<KnownDomain>>()
+		{
+			@Override
+			protected void onResult(final List<KnownDomain> domains)
+			{
+				if (domains != null)
+				{
+					Log.i(PasswordActivity.class.getName(), "Domains retrieved: " + domains.size());
+
+					for (final KnownDomain domain : domains)
+					{
+						Log.i(PasswordActivity.class.getName(), "Domain: " + domain.getDomain() + ", " + domain.getMaximumLength() + ", " + domain.getSpecialCharacters());
+
+						saveKnownDomain(domain.getDomain(), domain.getMaximumLength(), domain.getSpecialCharacters(), false);
+					}
+				}
+			}
+		});
 
 		return fragment;
 	}
@@ -269,6 +341,55 @@ public class DomainsFragment extends TitledFragment
 			}
 
 			return view;
+		}
+	}
+
+	private class IgnoredCallback<T> extends SuccessCallback<T>
+	{
+		@Override
+		protected void onResult(T result)
+		{
+			Log.i(PasswordActivity.class.getName(), "IgnoredCallback.onResult: " + result);
+		}
+	}
+
+	private abstract class SuccessCallback<T> implements Callback<T>
+	{
+		protected abstract void onResult(T result);
+
+		@Override
+		public void onResponse(final Response<T> response, final Retrofit retrofit)
+		{
+			final ResponseBody errorBody = response.errorBody();
+
+			if (errorBody != null)
+			{
+				try
+				{
+					final String errorText = errorBody.string();
+
+					Log.e(PasswordActivity.class.getName(), errorText);
+
+					return;
+				}
+				catch (IOException e)
+				{
+					e.printStackTrace();
+				}
+			}
+
+			final T body = response.body();
+
+			if (body != null)
+			{
+				onResult(body);
+			}
+		}
+
+		@Override
+		public void onFailure(Throwable t)
+		{
+			Log.e(PasswordActivity.class.getName(), "SuccessCallback.onFailure: " + t);
 		}
 	}
 }

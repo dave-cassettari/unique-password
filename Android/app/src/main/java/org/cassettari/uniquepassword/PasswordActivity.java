@@ -1,12 +1,10 @@
 package org.cassettari.uniquepassword;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 
 import org.cassettari.uniquepassword.fragments.DomainsFragment;
 import org.cassettari.uniquepassword.fragments.PasswordFragment;

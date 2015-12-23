@@ -1,0 +1,10 @@
+﻿
+# Update Database
+
+## Local
+
+Update-Database
+
+## Remote
+
+Update-Database -ConnectionString "Server=tcp:kc8115rijx.database.windows.net,1433;Database=uniquepassword;User ID=dave.cassettari@kc8115rijx;Password=b4Cd3093dc7f6064c7A58eb1559058b3ebBfa039714a238cf0Cd1ef3b8ffb641;Trusted_Connection=False;Encrypt=True;Connection Timeout=30;" -ConnectionProviderName "System.Data.SqlClient"
