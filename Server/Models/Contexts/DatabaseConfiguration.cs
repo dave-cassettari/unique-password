@@ -36,8 +36,16 @@ namespace Server.Models.Contexts
                 {
                     UserID = DomainsController.AnonymousUserID,
                     Website = "www.linkedin.com",
-                    SpecialCharacters = "ABCDEF$%^&*()",
                     LastModifiedOn = DateTime.UtcNow,
+                    SpecialCharacters = "ABCDEF$%^&*()",
+                },
+                new Domain()
+                {
+                    UserID = DomainsController.AnonymousUserID,
+                    Website = "www.giffgaff.com",
+                    MaximumLength = 20,
+                    LastModifiedOn = DateTime.UtcNow,
+                    SpecialCharacters = "ABCDEFGHIJKLMNOPQRSTUVQXYZ!\"£$%^&*():@~<>? ",
                 },
             };
 

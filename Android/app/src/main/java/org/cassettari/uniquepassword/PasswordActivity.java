@@ -3,6 +3,7 @@ package org.cassettari.uniquepassword;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -71,7 +72,7 @@ public class PasswordActivity
 			fragmentSettings.setSpecials(SettingsFragment.DEFAULT_SPECIAL_CHARACTERS);
 		}
 
-		fragmentPassword.setDomain(knownDomain.getDomain());
+		fragmentPassword.setDomain(knownDomain.getWebsite());
 		fragmentPassword.setMaster(null);
 
 		viewPager.setCurrentItem(1, true);
@@ -204,12 +205,23 @@ public class PasswordActivity
 			int offset = hashedCode % specialCharacters.length;
 			int frequency = (int) Math.floor((double) password.length() / SPECIAL_CHARACTER_COUNT);
 
+			Log.i(PasswordActivity.class.getName(), String.valueOf(hashedCode));
+			Log.i(PasswordActivity.class.getName(), String.valueOf(specialCharacters.length));
+			Log.i(PasswordActivity.class.getName(), String.valueOf(offset));
+			Log.i(PasswordActivity.class.getName(), String.valueOf(frequency));
+
 			for (int i = 0; i < SPECIAL_CHARACTER_COUNT; i++)
 			{
 				char includeChar = specialCharacters[(offset + i) % specialCharacters.length];
 				int includeIndex = (offset + frequency * i) % password.length();
 
+				Log.i(PasswordActivity.class.getName(), String.valueOf(includeChar));
+				Log.i(PasswordActivity.class.getName(), String.valueOf(includeIndex));
+				Log.i(PasswordActivity.class.getName(), newPassword.toString());
+
 				newPassword.setCharAt(includeIndex, includeChar);
+
+				Log.i(PasswordActivity.class.getName(), newPassword.toString());
 			}
 
 			password = newPassword.toString();

@@ -70,7 +70,7 @@ public class SettingsFragment extends TitledFragment implements TextWatcher
 
 	public String getSpecials()
 	{
-		return textSpecials.getText().toString();
+		return textSpecials.getText().toString().trim();
 	}
 
 	public void setSpecials(String specials)

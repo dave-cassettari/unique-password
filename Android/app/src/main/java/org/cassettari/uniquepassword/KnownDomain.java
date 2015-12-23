@@ -7,15 +7,15 @@ import java.util.Objects;
 public class KnownDomain
 {
 	@SerializedName("website")
-	private String domain;
+	private String website;
 	@SerializedName("maximumLength")
 	private Integer maximumLength;
 	@SerializedName("specialCharacters")
 	private String specialCharacters;
 
-	public KnownDomain(String domain)
+	public KnownDomain(String website)
 	{
-		this.domain = domain;
+		this.website = website;
 	}
 
 	@Override
@@ -28,12 +28,12 @@ public class KnownDomain
 
 		KnownDomain other = (KnownDomain)obj;
 
-		return Objects.equals(domain, other.domain);
+		return Objects.equals(website, other.website);
 	}
 
-	public String getDomain()
+	public String getWebsite()
 	{
-		return domain;
+		return website;
 	}
 
 	public Integer getMaximumLength()

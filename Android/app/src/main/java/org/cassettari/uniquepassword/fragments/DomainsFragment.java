@@ -1,6 +1,5 @@
 package org.cassettari.uniquepassword.fragments;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -13,29 +12,26 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.ResponseBody;
 import com.squareup.okhttp.logging.HttpLoggingInterceptor;
 
 import org.cassettari.uniquepassword.KnownDomain;
 import org.cassettari.uniquepassword.PasswordActivity;
 import org.cassettari.uniquepassword.R;
+import org.cassettari.uniquepassword.fragments.adapters.DomainListAdapter;
 import org.cassettari.uniquepassword.listeners.OnDomainChangedListener;
 import org.cassettari.uniquepassword.services.DomainsService;
+import org.cassettari.uniquepassword.services.callbacks.IgnoredCallback;
+import org.cassettari.uniquepassword.services.callbacks.SuccessCallback;
 import org.cassettari.uniquepassword.storage.DomainsDbHelper;
 
-import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import retrofit.Callback;
 import retrofit.GsonConverterFactory;
-import retrofit.Response;
 import retrofit.Retrofit;
 
 public class DomainsFragment extends TitledFragment
@@ -45,7 +41,7 @@ public class DomainsFragment extends TitledFragment
 
 	private DomainsService domains;
 	private DomainsDbHelper databaseHelper;
-	private KnownDomainAdapter listAdapter;
+	private DomainListAdapter listAdapter;
 	private OnDomainChangedListener domainChangedListener;
 
 	private final List<KnownDomain> knownDomains;
@@ -88,7 +84,7 @@ public class DomainsFragment extends TitledFragment
 		final SQLiteDatabase db = databaseHelper.getWritableDatabase();
 		final ContentValues values = new ContentValues();
 
-		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL, knownDomain.getDomain());
+		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL, knownDomain.getWebsite());
 		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH, knownDomain.getMaximumLength());
 		values.put(DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS, knownDomain.getSpecialCharacters());
 
@@ -96,7 +92,7 @@ public class DomainsFragment extends TitledFragment
 		{
 			listAdapter.remove(knownDomain);
 
-			final String website = knownDomain.getDomain();
+			final String website = knownDomain.getWebsite();
 			final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
 			final String[] arguments = {website};
 
@@ -131,21 +127,21 @@ public class DomainsFragment extends TitledFragment
 	private void removeKnownDomain(final KnownDomain knownDomain)
 	{
 		new AlertDialog.Builder(getContext())
-				.setTitle(String.format("Remove %s?", knownDomain.getDomain()))
+				.setTitle(String.format("Remove %s?", knownDomain.getWebsite()))
 				.setPositiveButton("Yes", new DialogInterface.OnClickListener()
 				{
 					public void onClick(DialogInterface dialog, int id)
 					{
 						listAdapter.remove(knownDomain);
 
-						final String domain = knownDomain.getDomain();
+						final String website = knownDomain.getWebsite();
 						final SQLiteDatabase db = databaseHelper.getWritableDatabase();
 						final String selection = DomainsDbHelper.DomainEntry.COLUMN_NAME_URL + " LIKE ?";
-						final String[] arguments = {domain};
+						final String[] arguments = {website};
 
 						db.delete(DomainsDbHelper.DomainEntry.TABLE_NAME, selection, arguments);
 
-						domains.delete(domain).enqueue(new IgnoredCallback<KnownDomain>());
+						domains.delete(website).enqueue(new IgnoredCallback<KnownDomain>());
 					}
 				})
 				.setNegativeButton("No", new DialogInterface.OnClickListener()
@@ -155,7 +151,7 @@ public class DomainsFragment extends TitledFragment
 
 					}
 				})
-				.setIcon(android.R.drawable.ic_delete)
+				.setIcon(R.drawable.ic_delete_grey600_48dp)
 				.show();
 	}
 
@@ -178,7 +174,7 @@ public class DomainsFragment extends TitledFragment
 		final View fragment = inflater.inflate(R.layout.fragment_domains, container, false);
 		final ListView listDomains = (ListView) fragment.findViewById(R.id.listDomains);
 
-		listAdapter = new KnownDomainAdapter(getContext(), knownDomains);
+		listAdapter = new DomainListAdapter(getContext(), knownDomains);
 
 		listDomains.setAdapter(listAdapter);
 		listDomains.setOnItemClickListener(this);
@@ -207,10 +203,10 @@ public class DomainsFragment extends TitledFragment
 		{
 			do
 			{
-				String url = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL));
-				Integer length = cursor.getInt(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH));
-				String specials = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS));
-				KnownDomain domain = new KnownDomain(url);
+				final String url = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_URL));
+				final Integer length = cursor.getInt(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_LENGTH));
+				final String specials = cursor.getString(cursor.getColumnIndex(DomainsDbHelper.DomainEntry.COLUMN_NAME_SPECIALS));
+				final KnownDomain domain = new KnownDomain(url);
 
 				if (length != 0)
 				{
@@ -253,9 +249,7 @@ public class DomainsFragment extends TitledFragment
 
 					for (final KnownDomain domain : domains)
 					{
-						Log.i(PasswordActivity.class.getName(), "Domain: " + domain.getDomain() + ", " + domain.getMaximumLength() + ", " + domain.getSpecialCharacters());
-
-						saveKnownDomain(domain.getDomain(), domain.getMaximumLength(), domain.getSpecialCharacters(), false);
+						saveKnownDomain(domain.getWebsite(), domain.getMaximumLength(), domain.getSpecialCharacters(), false);
 					}
 				}
 			}
@@ -292,104 +286,5 @@ public class DomainsFragment extends TitledFragment
 		removeKnownDomain(knownDomains.get(position));
 
 		return true;
-	}
-
-	private class KnownDomainAdapter extends ArrayAdapter<KnownDomain>
-	{
-		public KnownDomainAdapter(Context context, List<KnownDomain> objects)
-		{
-			super(context, android.R.layout.two_line_list_item, 0, objects);
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent)
-		{
-			View view = convertView;
-			KnownDomain item = getItem(position);
-
-			if (view == null)
-			{
-				view = ((Activity) getContext()).getLayoutInflater().inflate(android.R.layout.two_line_list_item, null);
-			}
-
-			TextView textView1 = (TextView) view.findViewById(android.R.id.text1);
-			TextView textView2 = (TextView) view.findViewById(android.R.id.text2);
-
-			if (item != null)
-			{
-				String text2;
-
-				if (item.getMaximumLength() != null && item.getSpecialCharacters() != null)
-				{
-					text2 = String.format("Length: %s, Extras: %s", item.getMaximumLength(), item.getSpecialCharacters());
-				}
-				else if (item.getMaximumLength() != null)
-				{
-					text2 = String.format("Length: %s", item.getMaximumLength());
-				}
-				else if (item.getSpecialCharacters() != null)
-				{
-					text2 = String.format("Extras: %s", item.getSpecialCharacters());
-				}
-				else
-				{
-					text2 = null;
-				}
-
-				textView1.setText(item.getDomain());
-				textView2.setText(text2);
-			}
-
-			return view;
-		}
-	}
-
-	private class IgnoredCallback<T> extends SuccessCallback<T>
-	{
-		@Override
-		protected void onResult(T result)
-		{
-			Log.i(PasswordActivity.class.getName(), "IgnoredCallback.onResult: " + result);
-		}
-	}
-
-	private abstract class SuccessCallback<T> implements Callback<T>
-	{
-		protected abstract void onResult(T result);
-
-		@Override
-		public void onResponse(final Response<T> response, final Retrofit retrofit)
-		{
-			final ResponseBody errorBody = response.errorBody();
-
-			if (errorBody != null)
-			{
-				try
-				{
-					final String errorText = errorBody.string();
-
-					Log.e(PasswordActivity.class.getName(), errorText);
-
-					return;
-				}
-				catch (IOException e)
-				{
-					e.printStackTrace();
-				}
-			}
-
-			final T body = response.body();
-
-			if (body != null)
-			{
-				onResult(body);
-			}
-		}
-
-		@Override
-		public void onFailure(Throwable t)
-		{
-			Log.e(PasswordActivity.class.getName(), "SuccessCallback.onFailure: " + t);
-		}
 	}
 }

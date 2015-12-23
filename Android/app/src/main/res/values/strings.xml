@@ -3,7 +3,7 @@
     <string name="action_settings">Settings</string>
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="text_password_label_domain_title">Website</string>
-    <string name="text_password_label_domain_desc">Usually the domain of the website, such as \'www.facebook.com\'</string>
+    <string name="text_password_label_domain_desc">Usually the website of the website, such as \'www.facebook.com\'</string>
     <string name="text_password_label_master_title">Master Password</string>
     <string name="text_password_label_master_desc">This is the same across all websites</string>
     <string name="text_password_label_hashed_title">Generated Password</string>
