@@ -4,7 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using UniquePassword.Server.Models.Contexts;
 using UniquePassword.Server.Models.Entities;
+using UniquePassword.Server.Models.ViewModels;
 
 namespace UniquePassword.Server.Models.Repositories
 {
@@ -19,15 +21,15 @@ namespace UniquePassword.Server.Models.Repositories
             _userManager = new UserManager<IdentityUser>(new UserStore<IdentityUser>(_context));
         }
 
-        public async Task<IdentityResult> RegisterUser(UserModel userModel)
+        public async Task<IdentityResult> RegisterUser(UserViewModel userModel)
         {
-            var user = new IdentityUser
+            var user = new IdentityUser()
             {
-                UserName = userModel.UserName,
+                Email = userModel.Username,
+                UserName = userModel.Username,
             };
 
             return await _userManager.CreateAsync(user, userModel.Password);
-
         }
 
         public async Task<IdentityUser> FindUser(string userName, string password)

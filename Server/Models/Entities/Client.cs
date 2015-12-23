@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace UniquePassword.Server.Models.Entities
 {
+    [Table(nameof(Client))]
     public class Client
     {
         [Key]

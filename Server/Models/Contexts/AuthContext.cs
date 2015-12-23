@@ -2,7 +2,7 @@
 using System.Data.Entity;
 using UniquePassword.Server.Models.Entities;
 
-namespace UniquePassword.Server.Models
+namespace UniquePassword.Server.Models.Contexts
 {
     public class AuthContext : IdentityDbContext<IdentityUser>
     {
@@ -21,7 +21,9 @@ namespace UniquePassword.Server.Models
         public AuthContext()
             : base(ConnectionName)
         {
+            var initialiser = new MigrateDatabaseToLatestVersion<AuthContext, AuthConfiguration>();
 
+            Database.SetInitializer(initialiser);
         }
     }
 }

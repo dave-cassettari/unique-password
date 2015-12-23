@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using UniquePassword.Server.Helpers;
+using UniquePassword.Server.Models;
 using UniquePassword.Server.Models.Entities;
 using UniquePassword.Server.Models.Repositories;
 
@@ -45,7 +46,7 @@ namespace UniquePassword.Server.Providers
                 return;
             }
 
-            if (client.ApplicationType == ApplicationType.NativeConfidential)
+            if (client.ApplicationType == ApplicationType.Native)
             {
                 if (string.IsNullOrWhiteSpace(clientSecret))
                 {

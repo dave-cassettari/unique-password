@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNet.Identity;
 using System.Threading.Tasks;
 using System.Web.Http;
-using UniquePassword.Server.Models.Entities;
 using UniquePassword.Server.Models.Repositories;
+using UniquePassword.Server.Models.ViewModels;
 
 namespace UniquePassword.Server.Controllers
 {
@@ -18,7 +18,7 @@ namespace UniquePassword.Server.Controllers
 
         [AllowAnonymous]
         [Route("register")]
-        public async Task<IHttpActionResult> Register(UserModel userModel)
+        public async Task<IHttpActionResult> Register(UserViewModel userModel)
         {
             if (!ModelState.IsValid)
             {

@@ -21,7 +21,13 @@ app.factory('AuthService', ['$http', '$q', 'localStorageService', function ($htt
 
     var _login = function (loginData) {
 
-        var data = "grant_type=password&username=" + loginData.userName + "&password=" + loginData.password;
+        //var data = "grant_type=password&username=" + loginData.userName + "&password=" + loginData.password;
+        var data = {
+            username: loginData.userName,
+            password: loginData.password,
+            client_id: 'browser',
+            grant_type: 'password',
+        };
 
         var deferred = $q.defer();
 
@@ -55,11 +61,11 @@ app.factory('AuthService', ['$http', '$q', 'localStorageService', function ($htt
     var _fillAuthData = function () {
 
         var authData = localStorageService.get('authorizationData');
+
         if (authData) {
             _authentication.isAuth = true;
             _authentication.userName = authData.userName;
         }
-
     }
 
     authServiceFactory.saveRegistration = _saveRegistration;
