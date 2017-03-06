@@ -1,6 +1,7 @@
-﻿html
+﻿body
 {
-    font-size: 11px;
+    font-size: 14px;
+    font-family: Helvetica, Arial, sans-serif;
 }
 
 form
@@ -13,13 +14,9 @@ i
     margin: 0 5px 0 0;
 }
 
-.label-text
+.help-block
 {
-    display: block;
-}
-
-.label-desc
-{
+    margin: 0 0 10px;
     color: #666;
     font-size: 90%;
     font-weight: normal;

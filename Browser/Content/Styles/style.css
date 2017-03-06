@@ -1,5 +1,6 @@
-﻿html {
-  font-size: 11px; }
+﻿body {
+  font-size: 14px;
+  font-family: Helvetica, Arial, sans-serif; }
 
 form {
   padding: 20px 20px 5px; }
@@ -7,10 +8,8 @@ form {
 i {
   margin: 0 5px 0 0; }
 
-.label-text {
-  display: block; }
-
-.label-desc {
+.help-block {
+  margin: 0 0 10px;
   color: #666;
   font-size: 90%;
   font-weight: normal;

@@ -132,7 +132,6 @@
     <Content Include="Content\Scripts\content.js" />
     <Content Include="Content\Scripts\controller.js" />
     <Content Include="Content\Scripts\sha256.js" />
-    <Content Include="Content\Scripts\vendor\angular-1.3.14.js" />
     <Content Include="Content\Scripts\vendor\jquery-2.1.3.js" />
     <Content Include="Content\Scripts\vendor\knockout-3.3.0.js" />
     <Content Include="Content\Styles\Vendor\bootstrap.css" />

@@ -1,6 +1,7 @@
 $(function () {
     function AppViewModel() {
         var DEFAULT_LENGTH = null,
+            DEFAULT_VERSION = 1,
             DEFAULT_INCLUDE = '!"£$%^&*():@~<>?',
             INCLUDE_COUNT = 4,
             MAX_RECENTS = 5,
@@ -56,6 +57,10 @@ $(function () {
                 data.include = self.include();
             }
 
+            if (self.version() !== DEFAULT_VERSION) {
+                data.version = self.version();
+            }
+
             save(key, data);
         }
 
@@ -75,9 +80,23 @@ $(function () {
                 } else {
                     self.include(DEFAULT_INCLUDE);
                 }
+
+                if (data.hasOwnProperty('version')) {
+                    self.version(data.version);
+                } else {
+                    self.version(DEFAULT_VERSION);
+                }
             };
 
             load(key, callback);
+        }
+
+        function capitalise(string, index) {
+            var char = string.charAt(index),
+                start = string.slice(0, index),
+                finish = string.slice(index + 1);
+
+            return start + char.toUpperCase() + finish;
         }
 
         if (isChrome && chrome.tabs !== undefined) {
@@ -96,7 +115,7 @@ $(function () {
         self.domain = ko.observable('');
         self.master = ko.observable('');
         self.length = ko.observable(DEFAULT_LENGTH);
-        self.version = ko.observable(1);
+        self.version = ko.observable(DEFAULT_VERSION);
         self.options = ko.observable(false);
         self.include = ko.observable(DEFAULT_INCLUDE);
         self.recents = ko.observableArray();
@@ -138,13 +157,21 @@ $(function () {
                 return '';
             }
 
-            if (length !== NaN && length > 0) {
+            if (!isNaN(length) && length > 0) {
                 var data = {},
                     key = Sha256.hash(domain);
 
                 hashed = hashed.substring(0, length);
 
                 data[key] = length;
+            }
+
+            if (version > DEFAULT_VERSION) {
+                var j;
+
+                for (j = 0; j < hashed.length; j += 2) {
+                    hashed = capitalise(hashed, j);
+                }
             }
 
             if (include !== null && include !== '') {
